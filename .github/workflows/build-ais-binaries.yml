@@ -1,0 +1,61 @@
+name: Build AIS binaries
+
+on:
+  workflow_dispatch:
+
+env:
+  REALM_CI: true
+
+jobs:
+  build-android:
+    name: Build Android
+    uses: ./.github/workflows/build-native.yml
+    with:
+      runner: ubuntu-22.04
+      binary: android
+      build: '["android-x86_64", "android-armeabi-v7a", "android-arm64-v8a"]'
+
+  build-ios:
+    name: Build IOS
+    uses: ./.github/workflows/build-native.yml
+    with:
+      runner: macos-15
+      binary: ios
+      build: '["ios-device", "ios-simulator"]'
+
+  build-android-combined:
+    name: Build combine Android
+    needs: build-android
+    uses: ./.github/workflows/binary-combine-android.yml
+
+  build-ios-xcframework:
+    name: Build combine iOS
+    needs: build-ios
+    uses: ./.github/workflows/binary-combine-ios.yml
+
+  package-binaries:
+    name: Package combined binaries
+    needs:
+      - build-android-combined
+      - build-ios-xcframework
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch combined Android binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: librealm-android
+          path: binaries/android
+
+      - name: Fetch iOS xcframework
+        uses: actions/download-artifact@v4
+        with:
+          name: librealm-ios
+          path: binaries/ios
+
+      - name: Store combined bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: realm-dart-ais-binaries
+          path: binaries
+          retention-days: 30
+          if-no-files-found: error
