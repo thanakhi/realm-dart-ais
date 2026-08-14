@@ -49,7 +49,11 @@ jobs:
 
       - name: Setup Android NDK
         if: startsWith(matrix.build, 'android')
-        run: echo "ANDROID_NDK=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
+        # NDK r29's libc++ forbids specializing std::is_pod, which the s2 library
+        # bundled in realm-core 14.11.0 does — pin the r27 LTS toolchain instead.
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.2.12479018"
+          echo "ANDROID_NDK=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
 
       - name: Select XCode for MacOS
         if: runner.os == 'macOS'

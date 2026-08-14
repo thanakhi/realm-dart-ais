@@ -27,7 +27,7 @@ jobs:
     name: Build MacOS
     uses: ./.github/workflows/build-native.yml
     with:
-      runner: macos-latest
+      runner: macos-15 # build-native.yml selects Xcode 16.4, which is not installed on newer images
       binary: macos
       build: '["macos"]'
 
@@ -51,7 +51,7 @@ jobs:
     name: Build IOS
     uses: ./.github/workflows/build-native.yml
     with:
-      runner: macos-latest
+      runner: macos-15 # build-native.yml selects Xcode 16.4, which is not installed on newer images
       binary: ios
       build: '["ios-device", "ios-simulator"]'
 
