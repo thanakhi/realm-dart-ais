@@ -106,8 +106,10 @@ jobs:
       # install_command.dart can later be repointed at this release.
       - name: Pack release archives
         run: |
+          # Entries must be bare relative paths (no leading ./) — the
+          # extractor in realm_dart's install command rejects a ./ entry.
           for os in android ios macos linux; do
-            tar -czf "$os.tar.gz" -C "binaries/$os" .
+            (cd "binaries/$os" && tar -czf "$GITHUB_WORKSPACE/$os.tar.gz" -- *)
           done
           sha256sum *.tar.gz > SHA256SUMS.txt
           cat SHA256SUMS.txt
