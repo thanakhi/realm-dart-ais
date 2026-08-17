@@ -65,6 +65,64 @@ jobs:
     needs: build-ios
     uses: ./.github/workflows/binary-combine-ios.yml
 
+  publish-binaries:
+    name: Publish binaries to GitHub Release
+    if: github.event_name == 'workflow_dispatch'
+    needs:
+      - build-android-combined
+      - build-ios-xcframework
+      - build-macos
+      - build-linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch combined Android binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: librealm-android
+          path: binaries/android
+
+      - name: Fetch iOS xcframework
+        uses: actions/download-artifact@v4
+        with:
+          name: librealm-ios
+          path: binaries/ios
+
+      - name: Fetch macOS binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: librealm-macos
+          path: binaries/macos
+
+      - name: Fetch Linux binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: librealm-linux
+          path: binaries/linux
+
+      # Asset names must match the archive names expected by
+      # `dart run realm install` (<os>.tar.gz) so the download URL in
+      # install_command.dart can later be repointed at this release.
+      - name: Pack release archives
+        run: |
+          for os in android ios macos linux; do
+            tar -czf "$os.tar.gz" -C "binaries/$os" .
+          done
+          sha256sum *.tar.gz > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "3.5.0" --repo "$GITHUB_REPOSITORY" \
+            --title "realm-dart-ais 3.5.0 native binaries" \
+            --notes "Native binaries built from source by CI run ${{ github.run_id }} (commit ${{ github.sha }}). Android: arm64-v8a/armeabi-v7a/x86_64, iOS: realm_dart.xcframework (device+simulator), plus macOS universal and Linux x64." \
+            --target "${{ github.sha }}" || true
+          gh release upload "3.5.0" --repo "$GITHUB_REPOSITORY" --clobber \
+            android.tar.gz ios.tar.gz macos.tar.gz linux.tar.gz SHA256SUMS.txt
+
   # Dart jobs
 
   dart-tests-windows:
