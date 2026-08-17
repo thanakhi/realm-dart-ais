@@ -4,7 +4,11 @@ description: Setup the runner with the necessary tools and dependencies.
 inputs:
   flutter-version:
     description: Flutter version to use.
-    default: stable
+    # Pinned instead of `stable`: newer Flutters bundle a flutter_test whose
+    # test_api/matcher pins are unsolvable against this workspace
+    # (test ^1.25.13 in realm_tests, analyzer ^7.3.0 in realm_generator),
+    # which breaks melos bootstrap before any test runs.
+    default: 3.35.5
   cache-key:
     description: Cache key to use for restoring and saving the cache.
     default: ${{ hashFiles('**/pubspec.yaml') }}
