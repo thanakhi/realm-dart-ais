@@ -10,6 +10,12 @@ on:
 env:
   REALM_CI: true
 
+# The repo's default workflow token is read-only; the test-reporter steps in
+# the reusable test workflows need checks: write to publish their check runs.
+permissions:
+  contents: read
+  checks: write
+
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
