@@ -68,7 +68,12 @@ runs:
       run: |
         puro upgrade-puro
         puro use --global ${{ inputs.flutter-version }}
-        puro upgrade ${{ inputs.flutter-version }}
+        # `puro upgrade` only applies to channel environments; on a pinned
+        # version it fails with "Cannot upgrade environment ... to a
+        # different version".
+        case "${{ inputs.flutter-version }}" in
+          stable|beta|master) puro upgrade ${{ inputs.flutter-version }} ;;
+        esac
         puro gc
 
     - name: Activate melos
