@@ -83,7 +83,11 @@ class InstallCommand extends Command<void> {
 
     print('Downloading Realm binaries for $version to ${destinationFile.absolute.path}');
     final client = HttpClient();
-    var url = 'https://static.realm.io/downloads/dart/${Uri.encodeComponent(version.toString())}/$archiveName';
+    // Binaries are hosted on the fork's GitHub Releases (built from source by
+    // its CI) instead of MongoDB's static.realm.io, which is unmaintained
+    // since the upstream SDK was deprecated. The release tag must equal the
+    // package version.
+    var url = 'https://github.com/thanakhi/realm-dart-ais/releases/download/${Uri.encodeComponent(version.toString())}/$archiveName';
     if (debug) {
       url = 'http://localhost:8000/$archiveName';
     }
