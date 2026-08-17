@@ -77,6 +77,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Fetch combined Android binaries
         uses: actions/download-artifact@v4
         with:
@@ -118,11 +121,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "3.5.0" --repo "$GITHUB_REPOSITORY" \
-            --title "realm-dart-ais 3.5.0 native binaries" \
+          # The release tag must equal the realm_dart package version:
+          # `dart run realm install` builds its download URL from it.
+          VERSION=$(sed -n 's/^version: *//p' packages/realm_dart/pubspec.yaml)
+          gh release create "$VERSION" --repo "$GITHUB_REPOSITORY" \
+            --title "realm-dart-ais $VERSION native binaries" \
             --notes "Native binaries built from source by CI run ${{ github.run_id }} (commit ${{ github.sha }}). Android: arm64-v8a/armeabi-v7a/x86_64, iOS: realm_dart.xcframework (device+simulator), plus macOS universal and Linux x64." \
             --target "${{ github.sha }}" || true
-          gh release upload "3.5.0" --repo "$GITHUB_REPOSITORY" --clobber \
+          gh release upload "$VERSION" --repo "$GITHUB_REPOSITORY" --clobber \
             android.tar.gz ios.tar.gz macos.tar.gz linux.tar.gz SHA256SUMS.txt
 
   # Dart jobs
